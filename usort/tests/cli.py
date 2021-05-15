@@ -5,10 +5,13 @@
 
 import os
 import unittest
+import unittest.mock
+from concurrent.futures.thread import ThreadPoolExecutor
 from contextlib import contextmanager
 from pathlib import Path
 from typing import AnyStr, Generator
 
+import trailrunner
 import volatile
 from click.testing import CliRunner
 
@@ -37,6 +40,9 @@ def sample_contents(s: AnyStr) -> Generator[str, None, None]:
         yield dtmp
 
 
+@unittest.mock.patch(
+    "usort.sorting.RUNNER", trailrunner.Trailrunner(executor_factory=ThreadPoolExecutor)
+)
 class CliTest(unittest.TestCase):
     def test_benchmark(self) -> None:
         with sample_contents("import sys\n") as dtmp:

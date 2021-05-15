@@ -3,16 +3,15 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import os
 from contextlib import contextmanager
-from fnmatch import fnmatch
+from contextvars import ContextVar
 from pathlib import Path
 from time import monotonic
-from typing import Callable, Generator, Iterable, List, Optional, Tuple
+from typing import Callable, Generator, List, Optional, Tuple
 
 import libcst as cst
 
-TIMINGS: List[Tuple[str, float]] = []
+TIMINGS: ContextVar[List[Tuple[str, float]]] = ContextVar("TIMINGS")
 
 
 @contextmanager
@@ -25,27 +24,31 @@ def timed(msg: str) -> Generator[None, None, None]:
     before = monotonic()
     yield
     after = monotonic()
-    TIMINGS.append((msg, after - before))
+
+    try:
+        TIMINGS.get().append((msg, after - before))
+    except LookupError:
+        pass
+
+
+@contextmanager
+def save_timings(to: List[Tuple[str, float]]) -> Generator[None, None, None]:
+    token = TIMINGS.set([])
+    yield
+    to.extend(TIMINGS.get())
+    TIMINGS.reset(token)
+
+
+def merge_timings(more: List[Tuple[str, float]]) -> None:
+    TIMINGS.get().extend(more)
 
 
 def print_timings(fn: Callable[[str], None] = print) -> None:
     """
     Print all stored timing values in microseconds.
     """
-    for msg, duration in TIMINGS:
+    for msg, duration in TIMINGS.get():
         fn(f"{msg + ':':50} {int(duration*1000000):7} µs")
-
-
-def walk(path: Path, glob: str) -> Iterable[Path]:
-    with timed(f"walking {path}"):
-        paths: List[Path] = []
-        for root, dirs, files in os.walk(path):
-            dirs[:] = [d for d in dirs if not d.startswith(".")]
-            root_path = Path(root)
-            for f in files:
-                if fnmatch(f, glob):
-                    paths.append(root_path / f)
-        return paths
 
 
 def try_parse(path: Path, data: Optional[bytes] = None) -> cst.Module:
