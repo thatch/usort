@@ -101,7 +101,7 @@ def list_imports(multiples: bool, debug: bool, filenames: List[str]) -> int:
 
 
 @main.command()
-@click.argument("filenames", type=click.Path(exists=True), nargs=-1)
+@click.argument("filenames", nargs=-1)
 @usort_command
 def check(filenames: List[str]) -> int:
     """

@@ -181,8 +181,7 @@ import os
 
         self.assertRegex(
             result.output,
-            r"Error sorting sample\.py: .+ "
-            r"(Permission denied|File does not have read permissions)",
+            r"Error sorting sample\.py: .+ Permission denied",
         )
         self.assertEqual(result.exit_code, 1)
 
