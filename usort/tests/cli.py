@@ -396,8 +396,8 @@ class StdinTest(unittest.TestCase):
     def test_stdin_preserves_encoding(self) -> None:
         # A latin-1 file must come back as latin-1 bytes, not UTF-8.
         # \xb5 is µ in latin-1; its UTF-8 encoding would be \xc2\xb5.
-        data = b"# -*- coding: latin-1 -*-\nimport b\nimport a\ns = \"\xb5\"\n"
+        data = b'# -*- coding: latin-1 -*-\nimport b\nimport a\ns = "\xb5"\n'
         result = self._sort_stdin(data)
-        expected = b"# -*- coding: latin-1 -*-\nimport a\nimport b\ns = \"\xb5\"\n"
+        expected = b'# -*- coding: latin-1 -*-\nimport a\nimport b\ns = "\xb5"\n'
         self.assertEqual(expected, result)
         self.assertNotIn(b"\xc2\xb5", result)  # no UTF-8 re-encoding of µ
